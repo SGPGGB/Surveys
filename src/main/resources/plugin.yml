@@ -1,5 +1,5 @@
 name: Surveys
 main: de.sgpggb.surveys.SurveysPlugin
 depend: [PluginUtilitiesLibBungee]
-version: 0.1
+version: '${finalversion}'
 author: AuroraRainbow, wea_ondara
