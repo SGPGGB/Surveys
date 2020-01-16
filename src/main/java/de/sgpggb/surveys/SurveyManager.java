@@ -19,7 +19,10 @@ public class SurveyManager {
         dbcontroller = new DBController();
         surveys = dbcontroller.loadSurveys();
     }
-
+    
+    public void reloadSurveys() {
+        surveys = dbcontroller.loadSurveys();
+    }
     public List<Survey> getActiveSurveys() {
         Timestamp curTime = Timestamp.valueOf(LocalDateTime.now());
         return surveys.values().stream()
@@ -38,6 +41,10 @@ public class SurveyManager {
     public void addUserAnswer(ProxiedPlayer player, int survey, Integer answer) {
         try {
             dbcontroller.addUserAnswer(player.getUniqueId(), player.getName(), survey, answer);
+            if (answer != null )
+                player.sendMessage(SurveysPlugin.CHATPREFIX + "Du hast erfolgreich abgestimmt!");
+            else
+                player.sendMessage(SurveysPlugin.CHATPREFIX + "Umfrage ignoriert");
         } catch (Exception e) {
             player.sendMessage(SurveysPlugin.CHATPREFIX + e.getMessage());
         }

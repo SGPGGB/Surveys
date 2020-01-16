@@ -57,6 +57,7 @@ public class SurveysCommand extends CustomCommandHandler {
                     cb.append("[" + a.getText() + "] ")
                             .event(new ClickEvent(Action.RUN_COMMAND, "/surveys vote " + s.getId() + " " + a.getId()));
                 }
+                cb.append("[Umfrage ignorieren]").color(ChatColor.RED).event(new ClickEvent(Action.RUN_COMMAND, "/surveys ignore " + s.getId()));
                 sender.sendMessage(cb.create());
             }
         } else {

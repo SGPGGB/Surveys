@@ -5,6 +5,7 @@ import de.sgpggb.pluginutilitieslibbungee.CustomJavaPlugin;
 import de.sgpggb.pluginutilitieslibbungee.cmd.CustomCommandHandler;
 import de.sgpggb.pluginutilitieslibbungee.sql.DBMigration;
 import de.sgpggb.surveys.cmd.IgnoreCommand;
+import de.sgpggb.surveys.cmd.ReloadCommand;
 import de.sgpggb.surveys.cmd.SurveysCommand;
 import de.sgpggb.surveys.cmd.VoteCommand;
 import de.sgpggb.surveys.util.DBMigrationSurveys;
@@ -47,6 +48,7 @@ public class SurveysPlugin extends CustomJavaPlugin {
         CustomCommandHandler requestscmd = new SurveysCommand("surveys", null, this.getLog());
         requestscmd.registerCmd(new VoteCommand());
         requestscmd.registerCmd(new IgnoreCommand());
+        requestscmd.registerCmd(new ReloadCommand());
         this.getProxy().getPluginManager().registerCommand(this, requestscmd);
     }
 

@@ -3,13 +3,35 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>de.sgpggb</groupId>
     <artifactId>Surveys</artifactId>
-    <version>1.0</version>
+    <version>1.01</version>
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <jenkins.version></jenkins.version>
+        <jenkins.versionappendix></jenkins.versionappendix>
+        <finalversion>${project.version}${jenkins.versionappendix}</finalversion>
     </properties>
+    <build>
+        <finalName>${project.artifactId}</finalName>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering> <!-- insert version into plugin.yml -->
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.7</version>
+                <configuration>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
     <repositories>
 	<repository>
 	    <id>bungeecord-repo</id>
