@@ -3,36 +3,13 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>de.sgpggb</groupId>
     <artifactId>Surveys</artifactId>
-    <version>1.1</version>
+    <version>1.2</version>
     <packaging>jar</packaging>
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <jenkins.version></jenkins.version>
-        <jenkins.versionappendix></jenkins.versionappendix>
-        <finalversion>${project.version}${jenkins.versionappendix}</finalversion>
-    </properties>
-    <build>
-        <finalName>${project.artifactId}</finalName>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering> <!-- insert version into plugin.yml -->
-            </resource>
-        </resources>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>2.7</version>
-                <configuration>
-                    <encoding>${project.build.sourceEncoding}</encoding>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
     <repositories>
+        <repository>
+            <id>sgpggb-repo</id>
+            <url>https://repo.sgpggb.de/repository/maven-releases/</url>
+        </repository>
         <repository>
             <id>bungeecord-repo</id>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
@@ -52,6 +29,110 @@
             <url>file:///${project.basedir}/../CraftBukkitJars/</url>
         </repository>
     </repositories>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <finalversion>${project.version}-local-${user.name}</finalversion>
+    </properties>
+    <profiles>
+        <profile>
+            <id>java9plus</id>
+            <activation>
+                <jdk>[1.9,)</jdk>
+            </activation>
+            <properties>
+                <maven.compiler.release>8</maven.compiler.release>
+            </properties>
+        </profile>
+        <profile>
+            <id>jenkins</id>
+            <activation>
+                <property>
+                    <name>env.JENKINS_URL</name>
+                    <value>https://jenkins.sgpggb.de/</value>
+                </property>
+            </activation>
+            <properties>
+                <finalversion>${project.version}-#${env.BUILD_NUMBER}</finalversion>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-deploy-plugin</artifactId>
+                        <version>2.7</version>
+                        <executions>
+                            <execution>
+                                <id>default-deploy</id>
+                                <phase>none</phase>
+                            </execution>
+                            <execution>
+                                <id>deploy</id>
+                                <phase>deploy</phase>
+                                <goals>
+                                    <goal>deploy-file</goal>
+                                </goals>
+                                <configuration>
+                                    <repositoryId>${project.distributionManagement.repository.id}</repositoryId>
+                                    <url>${project.distributionManagement.repository.url}</url>
+                                    <groupId>${project.groupId}</groupId>
+                                    <artifactId>${project.artifactId}</artifactId>
+                                    <version>${project.version}</version>
+                                    <file>${project.build.directory}/${project.build.finalName}.${project.packaging}</file>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+            <distributionManagement>
+                <repository>
+                    <id>sgpggb-repo</id>
+                    <name>SGPGGB Repository</name>
+                    <url>https://repo.sgpggb.de/repository/maven-releases/</url>
+                </repository>
+            </distributionManagement>
+        </profile>
+    </profiles>
+    <build>
+        <finalName>${project.artifactId}</finalName>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering> <!-- insert version into plugin.yml -->
+            </resource>
+        </resources>
+        <plugins>
+            <plugin> <!-- for debugging profiles -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-help-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>show-profiles</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>active-profiles</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin> <!-- for profile java9plus -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.0</version>
+            </plugin>
+            <plugin> <!-- for inserting values in plugin.yml -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.7</version>
+                <configuration>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
     <dependencies>
         <dependency>
             <groupId>net.md-5</groupId>
