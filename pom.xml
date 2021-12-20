@@ -137,13 +137,13 @@
         <dependency>
             <groupId>net.md-5</groupId>
             <artifactId>bungeecord-api</artifactId>
-            <version>1.15-SNAPSHOT</version>
+            <version>1.16-R0.4</version>
             <type>jar</type>
         </dependency>
         <dependency>
             <groupId>net.md-5</groupId>
             <artifactId>bungeecord-api</artifactId>
-            <version>1.15-SNAPSHOT</version>
+            <version>1.16-R0.4</version>
             <type>javadoc</type>
         </dependency>
         <dependency>
