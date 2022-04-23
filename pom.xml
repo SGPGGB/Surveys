@@ -121,7 +121,7 @@
             <plugin> <!-- for profile java9plus -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.10.0</version>
+                <version>3.10.1</version>
             </plugin>
             <plugin> <!-- for inserting values in plugin.yml -->
                 <groupId>org.apache.maven.plugins</groupId>
