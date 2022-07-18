@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>de.sgpggb</groupId>
     <artifactId>Surveys</artifactId>
@@ -15,24 +16,12 @@
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </repository>
         <repository>
-            <id>CraftBukkitJars-repo</id>
-            <releases>
-                <enabled>true</enabled>
-                <checksumPolicy>ignore</checksumPolicy>
-                <updatePolicy>always</updatePolicy>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-                <checksumPolicy>ignore</checksumPolicy>
-                <updatePolicy>always</updatePolicy>
-            </snapshots>
-            <url>file:///${project.basedir}/../CraftBukkitJars/</url>
+            <id>md-5-repo</id>
+            <url>https://repo.md-5.net/content/repository/public/</url>
         </repository>
     </repositories>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
         <finalversion>${project.version}-local-${user.name}</finalversion>
     </properties>
     <profiles>
@@ -42,7 +31,7 @@
                 <jdk>[1.9,)</jdk>
             </activation>
             <properties>
-                <maven.compiler.release>8</maven.compiler.release>
+                <maven.compiler.release>17</maven.compiler.release>
             </properties>
         </profile>
         <profile>
@@ -126,7 +115,7 @@
             <plugin> <!-- for inserting values in plugin.yml -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
-                <version>2.7</version>
+                <version>3.2.0</version>
                 <configuration>
                     <encoding>${project.build.sourceEncoding}</encoding>
                 </configuration>
@@ -137,26 +126,20 @@
         <dependency>
             <groupId>net.md-5</groupId>
             <artifactId>bungeecord-api</artifactId>
-            <version>1.16-R0.4</version>
-            <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>net.md-5</groupId>
-            <artifactId>bungeecord-api</artifactId>
-            <version>1.16-R0.4</version>
-            <type>javadoc</type>
+            <version>1.19-R0.1-SNAPSHOT</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>net.cubespace</groupId>
             <artifactId>Yamler-Bungee</artifactId>
-            <version>2.4</version>
-            <type>jar</type>
+            <version>2.4.0-SNAPSHOT</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>PluginUtilitiesLibBungee</artifactId>
-            <version>[1.20,)</version>
-            <type>jar</type>
+            <version>1.34</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>
