@@ -1,15 +1,17 @@
 package de.sgpggb.surveys;
 
-import de.sgpggb.pluginutilitieslibbungee.CustomConfig;
+import de.sgpggb.pluginutilitieslibbungee.CustomConfigurationConstants;
 import de.sgpggb.pluginutilitieslibbungee.CustomJavaPlugin;
 import de.sgpggb.pluginutilitieslibbungee.cmd.CustomCommandHandler;
-import de.sgpggb.pluginutilitieslibbungee.sql.DBMigration;
-import de.sgpggb.surveys.cmd.IgnoreCommand;
+import de.sgpggb.surveys.cmd.AddCommand;
+import de.sgpggb.surveys.cmd.AnswerCommand;
+import de.sgpggb.surveys.cmd.EditCommand;
+import de.sgpggb.surveys.cmd.ListCommand;
+import de.sgpggb.surveys.cmd.NextCommand;
 import de.sgpggb.surveys.cmd.ReloadCommand;
-import de.sgpggb.surveys.cmd.SurveysCommand;
-import de.sgpggb.surveys.cmd.VoteCommand;
-import de.sgpggb.surveys.util.DBMigrationSurveys;
-import de.sgpggb.surveys.util.SurveysConfig;
+import de.sgpggb.surveys.cmd.VersionCommand;
+import de.sgpggb.surveys.db.DBAdapter;
+import de.sgpggb.surveys.listener.PlayerListener;
 import net.md_5.bungee.api.ChatColor;
 
 public class SurveysPlugin extends CustomJavaPlugin {
@@ -22,37 +24,49 @@ public class SurveysPlugin extends CustomJavaPlugin {
         return instance;
     }
 
-    private SurveysConfig config;
-    private SurveyManager manager;
+    private Manager manager;
+    private DBAdapter dbAdapter;
 
     public SurveysPlugin() {
+        super();
         instance = this;
-        this.APIVERSION_MAJOR_REQ = 3;
+        this.APIVERSION_MAJOR_REQ = 4;
         this.APIVERSION_MINOR_REQ = 0;
-    }
-
-    public void onLoad() {
-        this.initConfig();
     }
 
     public void onEnable() {
         super.onEnable();
-        if (!this.initLib()) {
+        if (!this.initLib())
             return;
-        }
-        DBMigration dbmigration = new DBMigrationSurveys(this.getSQLConnection(), this.getLog());
-        dbmigration.checkDB();
 
-        manager = new SurveyManager();
+        dbAdapter = new DBAdapter(getSQLConnection(), getLog());
 
-        CustomCommandHandler requestscmd = new SurveysCommand("surveys", null, this.getLog());
-        requestscmd.registerCmd(new VoteCommand());
-        requestscmd.registerCmd(new IgnoreCommand());
-        requestscmd.registerCmd(new ReloadCommand());
-        this.getProxy().getPluginManager().registerCommand(this, requestscmd);
+        manager = new Manager();
+
+        CustomCommandHandler cmd = new CustomCommandHandler("surveys", null, this.getLog());
+        cmd.registerCmd(new AddCommand());
+        cmd.registerCmd(new AnswerCommand());
+        cmd.registerCmd(new EditCommand());
+        cmd.registerCmd(new ListCommand());
+        cmd.registerCmd(new NextCommand());
+        cmd.registerCmd(new ReloadCommand());
+        cmd.registerCmd(new VersionCommand());
+        this.getProxy().getPluginManager().registerCommand(this, cmd);
+
+        this.getProxy().getPluginManager().registerListener(this, new PlayerListener());
+    }
+
+    public static class ConfigurationConstants extends CustomConfigurationConstants {
+        public static final String CONFIGKEY_DATABASE_MYSQL_TABLES_REQUESTS = "database.mysql.tables.requests";
     }
 
     public void onDisable() {
+
+    }
+
+    @Override
+    public void reload() {
+        super.reload();
 
     }
 
@@ -61,20 +75,17 @@ public class SurveysPlugin extends CustomJavaPlugin {
         return "Surveys";
     }
 
-    private void initConfig() {
-        this.config = new SurveysConfig(this);
-    }
-
     @Override
-    public CustomConfig getCustomConfig() {
-        return config;
+    public void initConfig() {
+        super.initConfig();
+        //addConfigDefaults(ConfigurationConstants.CONFIGKEY_DEBUG, true);
     }
 
-    public SurveysConfig getConfig() {
-        return config;
-    }
-
-    public SurveyManager getManager() {
+    public Manager getManager() {
         return manager;
+    }
+
+    public DBAdapter getDbAdapter() {
+        return dbAdapter;
     }
 }

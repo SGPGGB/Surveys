@@ -8,7 +8,7 @@ import net.md_5.bungee.api.CommandSender;
 
 import java.util.List;
 
-public class ReloadCommand extends CustomCommand {
+public class VersionCommand extends CustomCommand {
     @Override
     protected boolean checkPermission(CommandSender sender) {
         return Permissions.ADMIN.check(sender);
@@ -16,17 +16,16 @@ public class ReloadCommand extends CustomCommand {
 
     @Override
     protected void execute(CommandSender sender, String[] args) {
-        SurveysPlugin.getInstance().reload();
-        ChatUtils.send(sender, SurveysPlugin.CHATPREFIX + "<green>Plugin neu geladen");
+        ChatUtils.send(sender, SurveysPlugin.CHATPREFIX + "<green>Pluginversion: " + SurveysPlugin.getInstance().getDescription().getVersion());
     }
 
     @Override
     public List<String> getCommandNames() {
-        return List.of("reload");
+        return List.of("version");
     }
 
     @Override
     public void printHelp(CommandSender sender) {
-        ChatUtils.send(sender, SurveysPlugin.CHATPREFIX + "/surveys reload - Plugin neu laden");
+        ChatUtils.send(sender, SurveysPlugin.CHATPREFIX + "/surveys version - Pluginversion anzeigen");
     }
 }
