@@ -26,10 +26,12 @@ public class DBMigrationSurveys extends DBMigration {
     private Table tableAnswers;
     private Table tableRewards;
     private Table tableGroups;
+    private Table tableUsers;
     private String questions;
     private String answers;
     private String rewards;
     private String groups;
+    private String users;
 
     @Override
     protected int detectVersion() {
@@ -106,11 +108,21 @@ public class DBMigrationSurveys extends DBMigration {
                 .constraint(new PrimaryKey("id"))
                 .build();
 
+        tableUsers = new TableBuilder(users, TableEngine.INNODB)
+            .column(new SQLColumn("id", "INT", 11, false, "AUTO_INCREMENT"))
+            .column(new SQLColumn("uuid", "CHAR", 36, false, ""))
+            .column(new SQLColumn("currentGroup", "INT", 11, true, ""))
+            .column(new SQLColumn("currentQuestion", "INT", 11, true, ""))
+            .constraint(new PrimaryKey("id"))
+            .build();
+
+
         if (!execute) {
             tableQuestions.createTable(sqlmanager);
             tableAnswers.createTable(sqlmanager);
             tableRewards.createTable(sqlmanager);
             tableGroups.createTable(sqlmanager);
+            tableUsers.createTable(sqlmanager);
         }
 
         if (!execute)
@@ -132,5 +144,9 @@ public class DBMigrationSurveys extends DBMigration {
 
     public Table getTableGroups() {
         return tableGroups;
+    }
+
+    public Table getTableUsers() {
+        return tableUsers;
     }
 }

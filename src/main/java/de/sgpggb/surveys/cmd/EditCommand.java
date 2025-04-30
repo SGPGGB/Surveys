@@ -12,7 +12,6 @@ import de.sgpggb.surveys.model.Reward;
 import de.sgpggb.surveys.model.RewardType;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
-import net.md_5.bungee.protocol.packet.Chat;
 
 import java.util.Arrays;
 import java.util.List;
@@ -78,14 +77,14 @@ public class EditCommand extends CustomCommand {
                 case "reward" -> {
                     switch (reward.getRewardType()) {
                         case MONEY, REWARD -> {
-                            int money;
+                            int i;
                             try {
-                                money = Integer.parseInt(value);
+                                i = Integer.parseInt(value);
                             } catch (NumberFormatException e) {
                                 ChatUtils.send(player, prefix + "<red>Das ist keine Nummer: " + value);
                                 return;
                             }
-                            reward.setReward(String.valueOf(money));
+                            reward.setReward(String.valueOf(i));
                             ChatUtils.send(player, prefix + "<green>Reward angepasst");
                         }
                         default -> {
@@ -158,6 +157,10 @@ public class EditCommand extends CustomCommand {
                     choices.remove(value);
                     question.setChoicesList(choices);
                     ChatUtils.send(player, prefix + "<green>Choices angepasst!");
+                }
+                default -> {
+                    ChatUtils.send(player, prefix + "Falsche Option angegeben! Siehe Doku");
+                    return;
                 }
             }
             SurveysPlugin.getInstance().getDbAdapter().saveQuestion(question);
@@ -237,6 +240,10 @@ public class EditCommand extends CustomCommand {
                     questions.remove(rem);
                     group.setQuestions(questions);
                     ChatUtils.send(player, prefix + "<green>Questions angepasst!");
+                }
+                default -> {
+                    ChatUtils.send(player, prefix + "Falsche Option angegeben! Siehe Doku");
+                    return;
                 }
             }
             SurveysPlugin.getInstance().getDbAdapter().saveGroup(group);

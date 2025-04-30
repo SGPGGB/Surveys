@@ -31,6 +31,9 @@ repositories {
 dependencies {
     api("net.md-5:bungeecord-api:1.21-R0.2")
     compileOnly("de.sgpggb:PluginUtilitiesLibBungee:4.9")
+    compileOnly("de.sgpggb:RewardsBungee:0.1")
+    compileOnly("de.sgpggb:SGPGGBEconomy:2.45")
+
 }
 
 group = "de.sgpggb"

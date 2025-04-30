@@ -1,5 +1,5 @@
 name: Surveys
 main: de.sgpggb.surveys.SurveysPlugin
-depend: [PluginUtilitiesLibBungee]
+depend: [PluginUtilitiesLibBungee, RewardsBungee, SGPGGBEconomy]
 version: '0.1-local-Marcel (1.21)'
 author: Tacker_

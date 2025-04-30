@@ -3,12 +3,17 @@ package de.sgpggb.surveys;
 import de.sgpggb.pluginutilitieslibbungee.Logging;
 import de.sgpggb.pluginutilitieslibbungee.utils.ChatUtils;
 import de.sgpggb.pluginutilitieslibbungee.utils.Util;
+import de.sgpggb.surveys.db.DBAdapter;
+import de.sgpggb.surveys.events.SurveysQuestionAnsweredEvent;
+import de.sgpggb.surveys.events.SurveysSurveyCompletedEvent;
 import de.sgpggb.surveys.model.Answer;
 import de.sgpggb.surveys.model.Group;
 import de.sgpggb.surveys.model.Question;
 import de.sgpggb.surveys.model.Reward;
+import de.sgpggb.surveys.model.User;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -25,10 +30,11 @@ public class Manager {
     private Map<Integer, Reward> rewardsMap;
 
     //          uuid  object
-    private Map<UUID, Question> currentQuestion = new HashMap<>();
+    private Map<UUID, User> usersMap = new HashMap<>();
     private Map<UUID, String> answersCache = new HashMap<>();
 
     Logging log = SurveysPlugin.getInstance().getLog();
+    DBAdapter db = SurveysPlugin.getInstance().getDbAdapter();
     String prefix = SurveysPlugin.CHATPREFIX;
 
     public Manager() {
@@ -39,11 +45,50 @@ public class Manager {
 
     /**
      * gets the current question for the player
-     * @param uuid the uuid
+     * @param uuid the uuid of user
      * @return current question
      */
     public Question getCurrentQuestion(UUID uuid) {
-        return currentQuestion.getOrDefault(uuid, null);
+        User user = getUser(uuid);
+        if (user == null)
+            return null;
+        int id = user.getCurrentQuestion();
+        if (id == -1)
+            return null;
+        return getQuestion(id);
+    }
+
+
+    /**
+     * sets the give question to the current question and saves it.
+     * @param uuid the uuid of user
+     * @param question the question
+     */
+    public void setCurrentQuestion(UUID uuid, Question question) {
+        User user = getUser(uuid);
+        if (user == null)
+            return;
+        user.setCurrentQuestion(question.getId());
+        db.saveUser(user);
+    }
+
+    /**
+     * sets the current group as finished. saves the user
+     * @param uuid the uuid of user
+     * @param group the finished group
+     */
+    public void setGroupAsCompleted(UUID uuid, Group group) {
+        User user = getUser(uuid);
+        if (user == null)
+            return;
+        List<Integer> list = user.getCompletedGroups();
+        list.add(group.getId());
+        user.setCompletedGroups(list);
+        db.saveUser(user);
+    }
+
+    public User getUser(UUID uuid) {
+        return usersMap.getOrDefault(uuid, null);
     }
 
     public Group getCurrentGroup(UUID uuid) {
@@ -63,7 +108,7 @@ public class Manager {
      * @param player the player
      */
     private void goNextQuestion(ProxiedPlayer player) {
-        Question current = currentQuestion.get(player.getUniqueId());
+        Question current = getCurrentQuestion(player.getUniqueId());
         Group group = getCurrentGroup(player.getUniqueId());
         int nextID = current.getNextID();
 
@@ -71,14 +116,17 @@ public class Manager {
         if (next == null) {
             //found no next question -> REWARDTIME
             Reward reward = getReward(group.getRewardID());
+            SurveysPlugin.getInstance().getProxy().getPluginManager().callEvent(new SurveysSurveyCompletedEvent(group, reward));
+
+            //adds group to completed for user
+            setGroupAsCompleted(player.getUniqueId(), group);
             if (reward == null)
                 return;
             reward.give(player);
         } else {
-            currentQuestion.put(player.getUniqueId(), next);
+            setCurrentQuestion(player.getUniqueId(), next);
             sendQuestion(player);
-            log.debug("player " + player.getName() + " went to question " + next.getId()
-                    + " in group " + next.getGroupID());
+            log.debug("player " + player.getName() + " went to question " + next.getId() + " in group " + next.getGroupID());
         }
     }
 
@@ -93,6 +141,7 @@ public class Manager {
 
         Answer ans = new Answer(-1, current.getId(), player.getUniqueId(), answer, null);
         SurveysPlugin.getInstance().getDbAdapter().saveAnswer(ans);
+        SurveysPlugin.getInstance().getProxy().getPluginManager().callEvent(new SurveysQuestionAnsweredEvent(current, ans));
         goNextQuestion(player);
     }
 
@@ -101,7 +150,7 @@ public class Manager {
      * @param player the player
      */
     public void sendQuestion(ProxiedPlayer player) {
-        Question current = currentQuestion.get(player.getUniqueId());
+        Question current = getCurrentQuestion(player.getUniqueId());
         ChatUtils.send(player, prefix + current.getText());
         String text = "";
         String bold = "";
@@ -187,26 +236,34 @@ public class Manager {
         answersCache.remove(uuid);
     }
 
-    public void checkLogin(ProxiedPlayer player) {
-        if (!player.isConnected())
+    public void onLogin(ProxiedPlayer player) {
+        if (player == null || !player.isConnected())
             return;
 
-        Answer answer = SurveysPlugin.getInstance().getDbAdapter().loadLastAnswer(player.getUniqueId(), -1);
-        if (answer == null) {
-            //no answer given yet
-            return;
+        User user = db.loadUser(player.getUniqueId());
+        if (user == null) {
+            user = new User(-1, player.getUniqueId(), -1, -1, new ArrayList<>());
+            db.saveUser(user);
+        }
+
+        usersMap.put(player.getUniqueId(), user);
+
+        if (user.getCurrentGroup() == -1) {
+            //TODO: user needs a new group
+
         }
 
         ChatUtils.send(player, prefix + "<click:run_command:/surveys next><gold>Du hast noch deine Umfrage offen!" +
                 " Klicke hier, um an dieser weiter zu machen und deine <b>Belohnung</b> abzuholen!");
     }
 
-    public Map<UUID, Question> getCurrentQuestion() {
-        return currentQuestion;
-    }
 
-    public void setCurrentQuestion(Map<UUID, Question> currentQuestion) {
-        this.currentQuestion = currentQuestion;
+    public void onLogout(ProxiedPlayer player) {
+        User user = getUser(player.getUniqueId());
+        if (user == null)
+            return;
+        db.saveUser(user);
+        usersMap.remove(player.getUniqueId());
     }
 
     public Map<UUID, String> getAnswersCache() {
@@ -240,4 +297,5 @@ public class Manager {
     public void setRewardsMap(Map<Integer, Reward> rewardsMap) {
         this.rewardsMap = rewardsMap;
     }
+
 }

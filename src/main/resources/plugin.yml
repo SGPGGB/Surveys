@@ -1,5 +1,5 @@
 name: Surveys
 main: de.sgpggb.surveys.SurveysPlugin
-depend: [PluginUtilitiesLibBungee]
+depend: [PluginUtilitiesLibBungee, RewardsBungee, SGPGGBEconomy]
 version: '${finalversion}'
 author: Tacker_

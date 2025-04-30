@@ -3,6 +3,8 @@ package de.sgpggb.surveys.model;
 
 import de.sgpggb.pluginutilitieslibbungee.Logging;
 import de.sgpggb.pluginutilitieslibbungee.utils.ChatUtils;
+import de.sgpggb.rewardsbungee.RewardsAPI;
+import de.sgpggb.sgpggbeconomy.EconomyAPI;
 import de.sgpggb.surveys.SurveysPlugin;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 
@@ -40,8 +42,14 @@ public class Reward {
 
         switch (rewardType) {
             case REWARD -> {
-                //TODO REWARDAPI
-                ChatUtils.send(player, "*reward " + reward + " erhalten*");
+                int id;
+                try {
+                    id = Integer.parseInt(reward);
+                } catch (NumberFormatException e) {
+                    log.error("could not create money with value " + reward);
+                    return;
+                }
+                RewardsAPI.addReward(player.getUniqueId(), id);
             }
             case MONEY -> {
                 int money;
@@ -51,8 +59,7 @@ public class Reward {
                     log.error("could not create money with value " + reward);
                     return;
                 }
-                ChatUtils.send(player, "*geld " + reward + " erhalten*");
-                //TODO: give money
+                EconomyAPI.give(player.getUniqueId(), money, "SURVEYS", "Belohnung für Survey");
             }
         }
 

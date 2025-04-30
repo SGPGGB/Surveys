@@ -6,12 +6,14 @@ import de.sgpggb.pluginutilitieslibbungee.sql.adv.Table;
 import de.sgpggb.pluginutilitieslibbungee.utils.Util;
 import de.sgpggb.surveys.Manager;
 import de.sgpggb.surveys.SurveysPlugin;
+import de.sgpggb.surveys.misc.Utils;
 import de.sgpggb.surveys.model.Answer;
 import de.sgpggb.surveys.model.AnswerType;
 import de.sgpggb.surveys.model.Group;
 import de.sgpggb.surveys.model.Question;
 import de.sgpggb.surveys.model.Reward;
 import de.sgpggb.surveys.model.RewardType;
+import de.sgpggb.surveys.model.User;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -32,6 +34,7 @@ public class DBAdapter {
     private final Table answersTable;
     private final Table rewardsTable;
     private final Table groupsTable;
+    private final Table usersTable;
 
     Logging log = SurveysPlugin.getInstance().getLog();
     Manager manager = SurveysPlugin.getInstance().getManager();
@@ -44,6 +47,7 @@ public class DBAdapter {
         answersTable = dbMig.getTableAnswers();
         rewardsTable = dbMig.getTableRewards();
         groupsTable = dbMig.getTableGroups();
+        usersTable = dbMig.getTableUsers();
     }
 
     public Map<Integer, Reward> loadAllRewards() {
@@ -210,6 +214,70 @@ public class DBAdapter {
             Util.close(stmt);
         }
         return null;
+    }
+
+    public User loadUser(UUID uuid) {
+        User user;
+        ResultSet res = null;
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.getConnection().prepareStatement("SELECT * FROM " + usersTable.getName()
+                + " WHERE uuid = ?");
+            stmt.setString(1, uuid.toString());
+            res = stmt.executeQuery();
+            if (res.next()) {
+                int id = res.getInt("id");
+                UUID u = UUID.fromString(res.getString("uuid"));
+                int currentGroup = res.getInt("currentGroup");
+                int currentQuestion = res.getInt("currentQuestion");
+                List<Integer> list = Utils.stringToList(res.getString("completedGroups"));
+                return new User(id, u, currentQuestion, currentGroup, list);
+            }
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        } finally {
+            Util.close(res);
+            Util.close(stmt);
+        }
+        return null;
+    }
+
+
+
+    public void saveUser(User user) {
+        PreparedStatement stmt = null;
+        ResultSet res = null;
+        try {
+            String sql;
+            if (user.getId() == -1) {
+                sql = "INSERT INTO " + usersTable.getName() + " (uuid, currentGroup, currentQuestion, completedGroups) VALUES (?, ?, ?, ?)";
+                stmt = conn.getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            } else {
+                sql = "UPDATE " + usersTable.getName() + " SET uuid = ?, currentGroup = ?, currentQuestion = ?, completedGroups = ? WHERE id = ?";
+                stmt = conn.getConnection().prepareStatement(sql);
+            }
+
+            stmt.setString(1, user.getUuid().toString());
+            stmt.setInt(2, user.getCurrentGroup());
+            stmt.setInt(3, user.getCurrentQuestion());
+            stmt.setString(4, Utils.listToString(user.getCompletedGroups()));
+
+            if (user.getId() == -1) {
+                stmt.executeUpdate();
+                res = stmt.getGeneratedKeys();
+                if (res.next()) {
+                    user.setId(res.getInt(1));
+                }
+            } else {
+                stmt.setInt(5, user.getId());
+                stmt.executeUpdate();
+            }
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        } finally {
+            Util.close(res);
+            Util.close(stmt);
+        }
     }
 
     public void saveReward(Reward reward) {
