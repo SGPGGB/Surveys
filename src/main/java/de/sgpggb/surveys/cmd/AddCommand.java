@@ -28,26 +28,36 @@ public class AddCommand extends CustomCommand {
             return;
         }
         String value = args[0];
+        int id;
         switch (value.toLowerCase()) {
             case "question" -> {
                 Question question = new Question();
                 SurveysPlugin.getInstance().getDbAdapter().saveQuestion(question);
+                SurveysPlugin.getInstance().getManager().addQuestion(question);
+                id = question.getId();
                 ChatUtils.send(sender, prefix + "<green>Question mit ID " + question.getId() + " erstellt!");
             }
             case "reward" -> {
                 Reward reward = new Reward();
                 SurveysPlugin.getInstance().getDbAdapter().saveReward(reward);
+                SurveysPlugin.getInstance().getManager().addReward(reward);
+                id = reward.getId();
                 ChatUtils.send(sender, prefix + "<green>Reward mit ID " + reward.getId() + " erstellt!");
             }
             case "group" -> {
                 Group group = new Group();
                 SurveysPlugin.getInstance().getDbAdapter().saveGroup(group);
+                SurveysPlugin.getInstance().getManager().addGroup(group);
+                id = group.getId();
                 ChatUtils.send(sender, prefix + "<green>Group mit ID " + group.getId() + " erstellt!");
             }
             default -> {
                 ChatUtils.send(sender, prefix + "<red>Die Option " + value + " gibt es nicht!");
+                return;
             }
         }
+        ChatUtils.send(sender, prefix + "<green><click:suggest_command:/surveys edit " + value.toLowerCase() + " "
+            + id + " >Klicken um direkt zu bearbeiten!");
     }
 
     @Override

@@ -19,7 +19,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,6 +75,7 @@ public class DBAdapter {
             Util.close(res);
             Util.close(stmt);
         }
+        log.debug("loaded " + rewards.size() + " rewards!");
         return rewards;
     }
 
@@ -93,7 +93,7 @@ public class DBAdapter {
                         res.getString("choices"),
                         res.getInt("nextID"),
                         AnswerType.valueOf(res.getString("answerType")),
-                        -1
+                    res.getInt("groupID")
                 );
                 questions.put(question.getId(), question);
             }
@@ -103,6 +103,7 @@ public class DBAdapter {
             Util.close(res);
             Util.close(stmt);
         }
+        log.debug("loaded " + questions.size() + " questions!");
         return questions;
     }
 
@@ -118,28 +119,15 @@ public class DBAdapter {
                 String name = res.getString("name");
                 int order = res.getInt("order");
                 String permission = res.getString("permission");
-                String questionsString = res.getString("questionIDs");
-                int rewardId = res.getInt("rewardID");
+                int firstQuestionID = res.getInt("firstQuestionID");
+                int rewardID = res.getInt("rewardID");
 
-                List<Integer> questions = new ArrayList<>();
-
-                for (String questionId : questionsString.split(";")) {
-                    int qId = Integer.parseInt(questionId);
-                    Question question = manager.getQuestion(qId);
-                    if (question == null) {
-                        log.error("could not find question with id " + qId);
-                    } else {
-                        question.setGroupID(id);
-                        questions.add(question.getId());
-                    }
-                }
-
-                Reward reward = manager.getReward(rewardId);
+                Reward reward = SurveysPlugin.getInstance().getManager().getReward(rewardID);
                 if (reward == null) {
-                    log.error("could not find reward with id " + rewardId);
+                    log.error("could not find reward with id " + rewardID);
                 }
 
-                Group group = new Group(id, name, order, permission, questions, rewardId);
+                Group group = new Group(id, name, order, permission, firstQuestionID, rewardID);
                 groups.put(group.getId(), group);
             }
         } catch (Throwable t) {
@@ -148,6 +136,7 @@ public class DBAdapter {
             Util.close(res);
             Util.close(stmt);
         }
+        log.debug("loaded " + groups.size() + " groups!");
         return groups;
     }
 
@@ -346,17 +335,18 @@ public class DBAdapter {
         try {
             String sql;
             if (question.getId() == -1) {
-                sql = "INSERT INTO " + questionsTable.getName() + " (text, choices, nextID, answerType) VALUES (?, ?, ?, ?)";
+                sql = "INSERT INTO " + questionsTable.getName() + " (text, choices, groupID, nextID, answerType) VALUES (?, ?, ?, ?, ?)";
                 stmt = conn.getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             } else {
-                sql = "UPDATE " + questionsTable.getName() + " SET text = ?, choices = ?, nextID = ?, answerType = ? WHERE id = ?";
+                sql = "UPDATE " + questionsTable.getName() + " SET text = ?, choices = ?, groupID = ?, nextID = ?, answerType = ? WHERE id = ?";
                 stmt = conn.getConnection().prepareStatement(sql);
             }
 
             stmt.setString(1, question.getText());
             stmt.setString(2, question.getChoices());
-            stmt.setInt(3, question.getNextID());
-            stmt.setString(4, question.getAnswerType().name());
+            stmt.setInt(3, question.getGroupID());
+            stmt.setInt(4, question.getNextID());
+            stmt.setString(5, question.getAnswerType().name());
 
             if (question.getId() == -1) {
                 stmt.executeUpdate();
@@ -365,7 +355,7 @@ public class DBAdapter {
                     question.setId(res.getInt(1));
                 }
             } else {
-                stmt.setInt(5, question.getId());
+                stmt.setInt(6, question.getId());
                 stmt.executeUpdate();
             }
         } catch (Throwable t) {
@@ -382,21 +372,17 @@ public class DBAdapter {
         String sql;
         try {
             if (group.getId() == -1) {
-                sql = "INSERT INTO " + groupsTable.getName() + " (name, order, permission, questionIDs, rewardID) VALUES (?, ?, ?, ?, ?)";
+                sql = "INSERT INTO " + groupsTable.getName() + " (name, `order`, permission, firstQuestionID, rewardID) VALUES (?, ?, ?, ?, ?)";
                 stmt = conn.getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             } else {
-                sql = "UPDATE " + groupsTable.getName() + " SET name = ?, order = ?, permission = ?, questionIDs = ?, rewardID = ? WHERE id = ?";
+                sql = "UPDATE " + groupsTable.getName() + " SET name = ?, `order` = ?, permission = ?, firstQuestionID = ?, rewardID = ? WHERE id = ?";
                 stmt = conn.getConnection().prepareStatement(sql);
             }
-
-            String questionsString = String.join(";", group.getQuestions().stream()
-                    .map(String::valueOf)
-                    .toArray(String[]::new));
 
             stmt.setString(1, group.getName());
             stmt.setInt(2, group.getOrder());
             stmt.setString(3, group.getPermission());
-            stmt.setString(4, questionsString);
+            stmt.setInt(4, group.getFirstQuestionID());
             stmt.setInt(5, group.getRewardID());
 
             if (group.getId() == -1) {

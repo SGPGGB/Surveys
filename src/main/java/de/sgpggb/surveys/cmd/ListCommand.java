@@ -57,6 +57,11 @@ public class ListCommand extends CustomCommand {
                     return;
                 }
 
+                if (manager.getRewardsMap().isEmpty()) {
+                    ChatUtils.send(sender, prefix + "<red>Nichts gefunden :(");
+                    return;
+                }
+
                 for (Reward reward : manager.getRewardsMap().values()) {
                     ChatUtils.send(sender, prefix + "[" + reward.getId() + "] " +
                             reward.getRewardType() + " - " + reward.getReward());
@@ -78,6 +83,11 @@ public class ListCommand extends CustomCommand {
                     return;
                 }
 
+                if (manager.getQuestionsMap().isEmpty()) {
+                    ChatUtils.send(sender, prefix + "<red>Nichts gefunden :(");
+                    return;
+                }
+
                 for (Question question : manager.getQuestionsMap().values()) {
                     ChatUtils.send(sender, prefix + "[" + question.getId() + "] " + question.getText());
                 }
@@ -93,9 +103,15 @@ public class ListCommand extends CustomCommand {
                     ChatUtils.send(sender, s + "Name: " + group.getName());
                     ChatUtils.send(sender, s + "RewardID: " + group.getRewardID());
                     ChatUtils.send(sender, s + "Order: " + group.getOrder());
-                    ChatUtils.send(sender, s + "Questions: " + group.getQuestions().toString());
+                    ChatUtils.send(sender, s + "Firstquestion: " + group.getFirstQuestionID());
                     return;
                 }
+
+                if (manager.getGroupsMap().isEmpty()) {
+                    ChatUtils.send(sender, prefix + "<red>Nichts gefunden :(");
+                    return;
+                }
+
                 for (Group group : manager.getGroupsMap().values()) {
                     ChatUtils.send(sender, prefix + "[" + group.getId() + "] " + group.getName());
                 }
@@ -110,6 +126,7 @@ public class ListCommand extends CustomCommand {
             case 0, 1 -> list.stream()
                 .filter(e -> args.length == 0 || e.toLowerCase().startsWith(args[0].toLowerCase()))
                 .sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.toList());
+            case 2 -> Util.list("<id>");
             default -> super.tabComplete(sender, args);
         };
     }

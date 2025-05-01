@@ -4,16 +4,13 @@ import de.sgpggb.pluginutilitieslibbungee.Logging;
 import de.sgpggb.surveys.Manager;
 import de.sgpggb.surveys.SurveysPlugin;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Group {
 
     int id;
     String name;
     int order;
     String permission;
-    List<Integer> questions;
+    int firstQuestionID;
     int rewardID;
 
     public Group() {
@@ -21,16 +18,16 @@ public class Group {
         this.name = "";
         this.order = -1;
         this.permission = "";
-        this.questions = new ArrayList<>();
+        this.firstQuestionID = -1;
         this.rewardID = -1;
     }
 
-    public Group(int id, String name, int order, String permission, List<Integer> questions, int rewardID) {
+    public Group(int id, String name, int order, String permission, int firstQuestionID, int rewardID) {
         this.id = id;
         this.name = name;
         this.order = order;
         this.permission = permission;
-        this.questions = questions;
+        this.firstQuestionID = firstQuestionID;
         this.rewardID = rewardID;
     }
 
@@ -39,6 +36,8 @@ public class Group {
 
     public Question getNextQuestion(Question current) {
         Question next = manager.getQuestion(current.getNextID());
+        if (next == null)
+            return null;
         if (next.getGroupID() != this.id) {
             log.error("found next question " + next.getId() + " but it is not in group " + this.id);
             return null;
@@ -78,12 +77,12 @@ public class Group {
         this.permission = permission;
     }
 
-    public List<Integer> getQuestions() {
-        return questions;
+    public int getFirstQuestionID() {
+        return firstQuestionID;
     }
 
-    public void setQuestions(List<Integer> questions) {
-        this.questions = questions;
+    public void setFirstQuestionID(int firstQuestionID) {
+        this.firstQuestionID = firstQuestionID;
     }
 
     public int getRewardID() {

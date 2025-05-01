@@ -42,6 +42,7 @@ public class SurveysPlugin extends CustomJavaPlugin {
         dbAdapter = new DBAdapter(getSQLConnection(), getLog());
 
         manager = new Manager();
+        manager.loadAll();
 
         CustomCommandHandler cmd = new CustomCommandHandler("surveys", null, this.getLog());
         cmd.registerCmd(new AddCommand());

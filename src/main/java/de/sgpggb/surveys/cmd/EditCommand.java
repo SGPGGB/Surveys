@@ -6,6 +6,7 @@ import de.sgpggb.pluginutilitieslibbungee.utils.Util;
 import de.sgpggb.surveys.Manager;
 import de.sgpggb.surveys.SurveysPlugin;
 import de.sgpggb.surveys.misc.Permissions;
+import de.sgpggb.surveys.model.AnswerType;
 import de.sgpggb.surveys.model.Group;
 import de.sgpggb.surveys.model.Question;
 import de.sgpggb.surveys.model.Reward;
@@ -13,6 +14,7 @@ import de.sgpggb.surveys.model.RewardType;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,7 +31,7 @@ public class EditCommand extends CustomCommand {
         //surveys edit reward id infoText/claimText/reward TEXT
         //surveys edit group id name/order/... TEXT
         //surveys edit question id text/rewardID/nextID/addChoice/removeChoice/permission/groupID
-        String prefix = SurveysPlugin.getInstance().CHATPREFIX;
+        String prefix = SurveysPlugin.CHATPREFIX;
         Manager manager = SurveysPlugin.getInstance().getManager();
         if (!(sender instanceof ProxiedPlayer player)) {
             ChatUtils.send(sender, prefix + "<red>Nur ingame!");
@@ -66,7 +68,7 @@ public class EditCommand extends CustomCommand {
                     ChatUtils.send(player, prefix + "<green>Claimtext angepasst");
                 }
                 case "rewardtype" -> {
-                    RewardType rewardType = RewardType.valueOf(value);
+                    RewardType rewardType = RewardType.fromString(value);
                     if (rewardType == null) {
                         ChatUtils.send(player, prefix + "<red>Rewardtype " + value + " gibt es nicht!");
                         return;
@@ -139,7 +141,7 @@ public class EditCommand extends CustomCommand {
                     ChatUtils.send(player, prefix + "<green>Group angepasst");
                 }
                 case "addchoice" -> {
-                    List<String> choices = question.getChoicesList();
+                    List<String> choices = new ArrayList<>(question.getChoicesList());
                     if (choices.contains(value)) {
                         ChatUtils.send(player, prefix + "<red>Wert " + value + " ist bereits eine Option");
                         return;
@@ -149,7 +151,7 @@ public class EditCommand extends CustomCommand {
                     ChatUtils.send(player, prefix + "<green>Choices angepasst!");
                 }
                 case "removechoice" -> {
-                    List<String> choices = question.getChoicesList();
+                    List<String> choices = new ArrayList<>(question.getChoicesList());
                     if (!choices.contains(value)) {
                         ChatUtils.send(player, prefix + "<red>Wert " + value + " ist keine Option");
                         return;
@@ -157,6 +159,15 @@ public class EditCommand extends CustomCommand {
                     choices.remove(value);
                     question.setChoicesList(choices);
                     ChatUtils.send(player, prefix + "<green>Choices angepasst!");
+                }
+                case "answertype" -> {
+                    AnswerType answerType = AnswerType.fromString(value);
+                    if (answerType == null) {
+                        ChatUtils.send(player, prefix + "<red>Rewardtype " + value + " gibt es nicht!");
+                        return;
+                    }
+                    question.setAnswerType(answerType);
+                    ChatUtils.send(player, prefix + "<green>Answertype angepasst!");
                 }
                 default -> {
                     ChatUtils.send(player, prefix + "Falsche Option angegeben! Siehe Doku");
@@ -207,39 +218,21 @@ public class EditCommand extends CustomCommand {
                     group.setPermission(value);
                     ChatUtils.send(player, prefix + "<green>Permission angepasst");
                 }
-                case "addquestion" -> {
-                    List<Integer> questions = group.getQuestions();
-                    int add;
+                case "firstquestionid" -> {
+                    int questionId;
                     try {
-                        add = Integer.parseInt(value);
+                        questionId = Integer.parseInt(value);
                     } catch (NumberFormatException e) {
                         ChatUtils.send(player, prefix + "<red>Keine Nummer: " + value);
                         return;
                     }
-                    if (questions.contains(add)) {
-                        ChatUtils.send(player, prefix + "<red>Wert " + value + " ist bereits eine Option");
+                    Question question = manager.getQuestion(questionId);
+                    if (question == null) {
+                        ChatUtils.send(player, prefix + "<red>Keine Question mit der ID " + questionId + " gefunden!");
                         return;
                     }
-                    questions.add(add);
-                    group.setQuestions(questions);
-                    ChatUtils.send(player, prefix + "<green>Questions angepasst!");
-                }
-                case "removequestion" -> {
-                    List<Integer> questions = group.getQuestions();
-                    int rem;
-                    try {
-                        rem = Integer.parseInt(value);
-                    } catch (NumberFormatException e) {
-                        ChatUtils.send(player, prefix + "<red>Keine Nummer: " + value);
-                        return;
-                    }
-                    if (!questions.contains(rem)) {
-                        ChatUtils.send(player, prefix + "<red>Wert " + value + " ist keine Option");
-                        return;
-                    }
-                    questions.remove(rem);
-                    group.setQuestions(questions);
-                    ChatUtils.send(player, prefix + "<green>Questions angepasst!");
+                    group.setFirstQuestionID(question.getId());
+                    ChatUtils.send(player, prefix + "<green>First Question angepasst");
                 }
                 default -> {
                     ChatUtils.send(player, prefix + "Falsche Option angegeben! Siehe Doku");
@@ -254,13 +247,23 @@ public class EditCommand extends CustomCommand {
     protected List<String> tabComplete(CommandSender sender, String[] args) {
         List<String> list = Util.list("question", "reward", "group");
         return switch (args.length) {
-            //TODO: tabcompletes
-            //surveys edit reward id infoText/claimText/reward TEXT
-            //surveys edit group id name/order/... TEXT
-            //surveys edit question id text/rewardID/nextID/addChoice/removeChoice/permission/groupID
             case 0, 1 -> list.stream()
                 .filter(e -> args.length == 0 || e.toLowerCase().startsWith(args[0].toLowerCase()))
                 .sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.toList());
+            case 2 -> Util.list("<id>");
+            case 3 -> switch (args[0].toLowerCase()) {
+                    case "reward" -> Util.list("infotext", "claimtext", "rewardtype", "reward").stream()
+                        .filter(e -> e.startsWith(args[2].toLowerCase()))
+                        .collect(Collectors.toList());
+                    case "question" -> Util.list("text", "nextid", "groupid", "addchoice", "removechoice", "answertype")
+                        .stream().filter(e -> e.startsWith(args[2].toLowerCase()))
+                        .collect(Collectors.toList());
+                    case "group" -> Util.list("name", "order", "rewardid", "permission", "firstquestionid")
+                        .stream().filter(e -> e.startsWith(args[2].toLowerCase()))
+                        .collect(Collectors.toList());
+                    default -> List.of();
+                };
+            case 4 -> Util.list("<wert>");
             default -> super.tabComplete(sender, args);
         };
     }

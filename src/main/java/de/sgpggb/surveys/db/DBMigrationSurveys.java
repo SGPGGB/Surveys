@@ -20,6 +20,7 @@ public class DBMigrationSurveys extends DBMigration {
         this.answers = "surveys_answers";
         this.rewards = "surveys_rewards";
         this.groups = "surveys_groups";
+        this.users = "surveys_users";
     }
 
     private Table tableQuestions;
@@ -103,7 +104,7 @@ public class DBMigrationSurveys extends DBMigration {
                 .column(new SQLColumn("name", "VARCHAR", 64, true, ""))
                 .column(new SQLColumn("order", "INT", 11, true, ""))
                 .column(new SQLColumn("permission", "VARCHAR", 64, true, ""))
-                .column(new SQLColumn("questionIDs", "TEXT", 0, true, ""))
+                .column(new SQLColumn("firstQuestionID", "INT", 11, true, ""))
                 .column(new SQLColumn("rewardID", "INT", 11, true, ""))
                 .constraint(new PrimaryKey("id"))
                 .build();
@@ -113,6 +114,7 @@ public class DBMigrationSurveys extends DBMigration {
             .column(new SQLColumn("uuid", "CHAR", 36, false, ""))
             .column(new SQLColumn("currentGroup", "INT", 11, true, ""))
             .column(new SQLColumn("currentQuestion", "INT", 11, true, ""))
+            .column(new SQLColumn("completedGroups", "TEXT", 0, true, ""))
             .constraint(new PrimaryKey("id"))
             .build();
 

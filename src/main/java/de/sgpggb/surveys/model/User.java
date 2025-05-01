@@ -19,6 +19,14 @@ public class User {
         this.completedGroups = completedGroups;
     }
 
+    public boolean hasCompletedGroup(int id) {
+        return completedGroups.contains(id);
+    }
+
+    public boolean hasCompletedGroup(Group group) {
+        return hasCompletedGroup(group.getId());
+    }
+
     public int getId() {
         return id;
     }

@@ -6,5 +6,13 @@ public enum RewardType {
     REWARD,
     ;
 
+    public static RewardType fromString(String value) {
+        for (RewardType type : values()) {
+            if (type.name().equalsIgnoreCase(value)) {
+                return type;
+            }
+        }
+        return null;
+    }
 
 }
