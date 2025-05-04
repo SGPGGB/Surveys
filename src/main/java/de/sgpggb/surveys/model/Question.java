@@ -2,6 +2,7 @@ package de.sgpggb.surveys.model;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Question {
 
@@ -67,7 +68,9 @@ public class Question {
     }
 
     public void setChoicesList(List<String> choices) {
-        this.choices = String.join(";", choices);
+        this.choices = choices.stream()
+            .filter(s -> !s.isEmpty())
+            .collect(Collectors.joining(";"));
     }
 
     public String getChoices() {

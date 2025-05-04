@@ -219,7 +219,7 @@ public class DBAdapter {
                 UUID u = UUID.fromString(res.getString("uuid"));
                 int currentGroup = res.getInt("currentGroup");
                 int currentQuestion = res.getInt("currentQuestion");
-                List<Integer> list = Utils.stringToList(res.getString("completedGroups"));
+                List<Integer> list = Utils.stringToIntList(res.getString("completedGroups"));
                 return new User(id, u, currentQuestion, currentGroup, list);
             }
         } catch (Throwable t) {
@@ -247,9 +247,9 @@ public class DBAdapter {
             }
 
             stmt.setString(1, user.getUuid().toString());
-            stmt.setInt(2, user.getCurrentGroup());
-            stmt.setInt(3, user.getCurrentQuestion());
-            stmt.setString(4, Utils.listToString(user.getCompletedGroups()));
+            stmt.setInt(2, user.getCurrentGroupID());
+            stmt.setInt(3, user.getCurrentQuestionID());
+            stmt.setString(4, Utils.intListToString(user.getCompletedGroups()));
 
             if (user.getId() == -1) {
                 stmt.executeUpdate();

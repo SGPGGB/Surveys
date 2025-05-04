@@ -7,20 +7,21 @@ import java.util.stream.Collectors;
 
 public class Utils {
 
-    public static List<Integer> stringToList(String s) {
+    public static List<Integer> stringToIntList(String s) {
         if (s == null || s.isEmpty())
             return new ArrayList<>();
         return Arrays.stream(s.split(";")).map(String::trim).map(Integer::parseInt).collect(Collectors.toList());
     }
 
+    public static List<String> stringToStringList(String s) {
+        if (s == null || s.isEmpty())
+            return new ArrayList<>();
+        return Arrays.stream(s.split(";")).map(String::trim).collect(Collectors.toList());
+    }
 
 
-
-    public static String listToString(List<Integer> list) {
+    public static String intListToString(List<Integer> list) {
         return list.stream().map(String::valueOf).collect(Collectors.joining(";"));
     }
 
-    public static String listToString2(List<Integer> list) {
-        return String.join(";", list.stream().map(String::valueOf).toArray(String[]::new));
-    }
 }

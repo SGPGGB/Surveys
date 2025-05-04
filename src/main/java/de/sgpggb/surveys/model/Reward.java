@@ -34,9 +34,10 @@ public class Reward {
         this.rewardType = rewardType;
     }
 
-    public void give(ProxiedPlayer player) {
-        if (!player.isConnected()) {
-            log.error("tried to give player " + player.getName() + " a rewardID, but its not online");
+    public void give(User user) {
+        ProxiedPlayer player = SurveysPlugin.getInstance().getProxy().getPlayer(user.getUuid());
+        if (player == null || !player.isConnected()) {
+            log.error("tried to give player " + user.getName() + " a rewardID, but its not online");
             return;
         }
 

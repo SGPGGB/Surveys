@@ -4,6 +4,7 @@ import de.sgpggb.pluginutilitieslibbungee.cmd.CustomCommand;
 import de.sgpggb.pluginutilitieslibbungee.utils.ChatUtils;
 import de.sgpggb.surveys.SurveysPlugin;
 import de.sgpggb.surveys.misc.Permissions;
+import de.sgpggb.surveys.model.User;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 
@@ -23,7 +24,13 @@ public class NextCommand extends CustomCommand {
             return;
         }
 
-        SurveysPlugin.getInstance().getManager().sendQuestion(player);
+        User user = SurveysPlugin.getInstance().getManager().getUser(player.getUniqueId());
+        if (user == null) {
+            SurveysPlugin.getInstance().getLog().error("no user object on player " + player.getName());
+            return;
+        }
+
+        SurveysPlugin.getInstance().getManager().sendQuestion(user);
     }
 
     @Override

@@ -6,6 +6,7 @@ import de.sgpggb.pluginutilitieslibbungee.utils.Util;
 import de.sgpggb.surveys.db.DBAdapter;
 import de.sgpggb.surveys.events.SurveysQuestionAnsweredEvent;
 import de.sgpggb.surveys.events.SurveysSurveyCompletedEvent;
+import de.sgpggb.surveys.misc.Utils;
 import de.sgpggb.surveys.model.Answer;
 import de.sgpggb.surveys.model.Group;
 import de.sgpggb.surveys.model.Question;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 
 public class Manager {
@@ -45,51 +47,6 @@ public class Manager {
         rewardsMap = SurveysPlugin.getInstance().getDbAdapter().loadAllRewards();
         groupsMap = SurveysPlugin.getInstance().getDbAdapter().loadAllGroups();
     }
-
-    /**
-     * gets the current question for the player
-     * @param uuid the uuid of user
-     * @return current question or null if no question is left
-     */
-    public Question getCurrentQuestion(UUID uuid) {
-        User user = getUser(uuid);
-        if (user == null)
-            return null;
-        int id = user.getCurrentQuestion();
-        if (id == -1)
-            return null;
-        return getQuestion(id);
-    }
-
-
-    /**
-     * sets the give question to the current question and saves it.
-     * @param uuid the uuid of user
-     * @param question the question
-     */
-    public void setCurrentQuestion(UUID uuid, Question question) {
-        User user = getUser(uuid);
-        if (user == null)
-            return;
-        user.setCurrentQuestion(question.getId());
-        db.saveUser(user);
-    }
-
-    /**
-     * sets the current group as finished. saves the user
-     * @param uuid the uuid of user
-     * @param group the finished group
-     */
-    public void setGroupAsCompleted(UUID uuid, Group group) {
-        User user = getUser(uuid);
-        if (user == null)
-            return;
-        List<Integer> list = user.getCompletedGroups();
-        list.add(group.getId());
-        user.setCompletedGroups(list);
-        db.saveUser(user);
-    }
-
 
     /**
      * returns the next group for given user
@@ -136,19 +93,6 @@ public class Manager {
     }
 
     /**
-     * returns the current group of user
-     * @param uuid the uuid of user
-     * @return the current group or null
-     */
-    public Group getCurrentGroup(UUID uuid) {
-        Question question = getCurrentQuestion(uuid);
-        if (question == null)
-            return null;
-        int gId = question.getGroupID();
-        return getGroup(gId);
-    }
-
-    /**
      * returns the group by given id
      * @param id the id
      * @return the group or null
@@ -171,64 +115,78 @@ public class Manager {
 
     /**
      * sends player the next question, updates cache
-     * @param player the player
+     * @param user the user
      */
-    private void goNextQuestion(ProxiedPlayer player) {
-        Question current = getCurrentQuestion(player.getUniqueId());
-        Group group = getCurrentGroup(player.getUniqueId());
-        int nextID = current.getNextID();
+    private void goNextQuestion(User user) {
+        Question current = user.getCurrentQuestion();
+        Group group = user.getCurrentGroup();
 
+        if (current == null || group == null) {
+            log.error("user " + user.getName() + " went to next question, but current group or question is null!");
+            return;
+        }
+
+        int nextID = current.getNextID();
         Question next = group.getNextQuestion(current);
         if (next == null) {
             //found no next question -> REWARDTIME
             Reward reward = getReward(group.getRewardID());
             SurveysPlugin.getInstance().getProxy().getPluginManager().callEvent(new SurveysSurveyCompletedEvent(group, reward));
 
-            //adds group to completed for user
-            setGroupAsCompleted(player.getUniqueId(), group);
+            user.setCurrentGroupID(-1);
+            user.setCurrentQuestionID(-1);
+            user.addGroupCompleted(group);
+
+            user.save();
+
             if (reward == null)
                 return;
-            reward.give(player);
+            reward.give(user);
         } else {
-            setCurrentQuestion(player.getUniqueId(), next);
-            sendQuestion(player);
-            log.debug("player " + player.getName() + " went to question " + next.getId() + " in group " + next.getGroupID());
+            user.setCurrentQuestionID(next.getId());
+            user.save();
+
+            sendQuestion(user);
+            log.debug("player " + user.getName() + " went to question " + next.getId() + " in group " + next.getGroupID());
         }
     }
 
     /**
      * saves answer to the db
-     * @param player the player
+     * @param user the user
      * @param answer the answer
      */
-    public void answer(ProxiedPlayer player, String answer) {
-        Question current = getCurrentQuestion(player.getUniqueId());
-        log.debug("player " + player.getName() + " answered question " + current.getId() + " with " + answer);
+    public void answer(User user, String answer) {
+        Question current = user.getCurrentQuestion();
+        if (current == null) {
+            log.error("user " + user.getName() + " answered, but question is null!");
+            return;
+        }
+        log.debug("player " + user.getName() + " answered question " + current.getId() + " with " + answer);
 
-        Answer ans = new Answer(-1, current.getId(), player.getUniqueId(), answer, null);
+        Answer ans = new Answer(-1, current.getId(), user.getUuid(), answer, null);
         db.saveAnswer(ans);
         SurveysPlugin.getInstance().getProxy().getPluginManager().callEvent(new SurveysQuestionAnsweredEvent(current, ans));
-        goNextQuestion(player);
+        goNextQuestion(user);
     }
 
     /**
      * sends the player the text for its current question
-     * @param player the player
+     * @param user the user
      */
-    public void sendQuestion(ProxiedPlayer player) {
-        Question current = getCurrentQuestion(player.getUniqueId());
-
+    public void sendQuestion(User user) {
+        Question current = user.getCurrentQuestion();
         if (current == null) {
-            log.error("tried sending a question, but user " + player.getName() + " has no current question");
+            log.error("tried sending a question, but user " + user.getName() + " has no current question");
             return;
         }
 
-        ChatUtils.send(player, prefix + current.getText());
+        ChatUtils.send(user.getUuid(), prefix + current.getText());
         StringBuilder text = new StringBuilder();
-        List<String> answers = getAnswerList(player.getUniqueId());
+        List<String> answers = getAnswerList(user.getUuid());
         switch (current.getAnswerType()) {
             case FREE_TEXT -> {
-                text = new StringBuilder("<green><click:show_command:/surveys answer >[Klicken zum Antworten]");
+                text = new StringBuilder("<green><click:suggest_command:/surveys answer >[Klicken zum Antworten]");
             }
             case SINGLE_CHOICE, NUMERICAL, MULTIPLE_CHOICE -> {
                 List<String> choices = current.getChoicesList();
@@ -238,9 +196,7 @@ public class Manager {
                         b = true;
                     text.append(getRandomColor())
                         .append(b ? "<b>" : "")
-                        .append("[<click:run_command:/surveys answer ")
-                        .append(s)
-                        .append(">")
+                        .append("[<click:run_command:/surveys answer " + s + ">")
                         .append(s)
                         .append("] ")
                         .append(b ? "</b>" : "");
@@ -248,7 +204,7 @@ public class Manager {
             }
         }
 
-        ChatUtils.send(player, prefix + text);
+        ChatUtils.send(user.getUuid(), prefix + text);
         //ChatUtils.send(player, prefix + "<green><click:run_command:/surveys answer #confirm>[Klicken um Antwort abzuschicken]");
     }
 
@@ -267,22 +223,22 @@ public class Manager {
 
     /**
      * saves current answer to the cache
-     * @param uuid the uuid
+     * @param user the user
      * @param answer the answer
      */
-    public void addAnswerToCache(UUID uuid, String answer) {
-        Question current = getCurrentQuestion(uuid);
+    public void addAnswerToCache(User user, String answer) {
+        Question current = user.getCurrentQuestion();
         if (current == null)
             return;
 
         switch (current.getAnswerType()) {
             case NUMERICAL, FREE_TEXT, SINGLE_CHOICE -> {
-                answersCache.put(uuid, answer);
+                answersCache.put(user.getUuid(), answer);
             }
             case MULTIPLE_CHOICE -> {
-                String s = answersCache.getOrDefault(uuid, "");
+                String s = answersCache.getOrDefault(user.getUuid(), "");
                 s = s + answer + ";";
-                answersCache.put(uuid, s);
+                answersCache.put(user.getUuid(), s);
             }
         }
     }
@@ -292,8 +248,7 @@ public class Manager {
     }
 
     public List<String> getAnswerList(UUID uuid) {
-        String s = getAnswerCache(uuid);
-        return Arrays.asList(s.split(";"));
+        return Utils.stringToStringList(getAnswerCache(uuid));
     }
 
     public Question getQuestion(int id) {
@@ -309,28 +264,27 @@ public class Manager {
     }
 
     public void onLogin(ProxiedPlayer player) {
-        if (player == null || !player.isConnected())
-            return;
-
         User user = db.loadUser(player.getUniqueId());
         if (user == null) {
             user = new User(-1, player.getUniqueId(), -1, -1, new ArrayList<>());
             db.saveUser(user);
         }
 
+        user.setName(player.getName());
+
         usersMap.put(player.getUniqueId(), user);
 
-        if (user.getCurrentGroup() == -1) {
+        if (user.getCurrentGroupID() == -1) {
             Group next = getNextGroup(user.getUuid());
             if (next == null) {
                 log.debug("found no next group for user " + player.getName() + "! Already completed " + user.getCompletedGroups());
                 return;
             }
-            user.setCurrentGroup(next.getId());
-            user.setCurrentQuestion(next.getFirstQuestionID());
+            user.setCurrentGroupID(next.getId());
+            user.setCurrentQuestionID(next.getFirstQuestionID());
         }
 
-        Group group = getCurrentGroup(player.getUniqueId());
+        Group group = user.getCurrentGroup();
         if (group == null)
             return;
 
@@ -339,7 +293,7 @@ public class Manager {
             return;
         }
 
-        Question question = getCurrentQuestion(player.getUniqueId());
+        Question question = user.getCurrentQuestion();
         if (question == null)
             return;
 
@@ -349,8 +303,14 @@ public class Manager {
             return;
         }
 
-        ChatUtils.send(player, prefix + "<click:run_command:/surveys next><gold>Du hast noch deine Umfrage offen!" +
+        SurveysPlugin.getInstance().getProxy().getScheduler().schedule(SurveysPlugin.getInstance(), () -> {
+            if (!player.isConnected())
+                return;
+
+            ChatUtils.send(player, prefix + "<click:run_command:/surveys next><gold>Du hast noch eine Umfrage offen!" +
                 " Klicke hier, um an dieser weiter zu machen und am Ende deine <b>Belohnung</b> abzuholen!");
+
+            }, 45, TimeUnit.SECONDS);
     }
 
 
