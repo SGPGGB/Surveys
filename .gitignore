@@ -1,33 +1,28 @@
+# Build output
+/build/
 /target/
-/.idea/
+
+# IDEs
+.idea/
+/.vscode/
+/*.iml
+
+# Eclipse
 .classpath
 .project
 .settings/
-target/
+
+# Gradle
 .gradle/
-.gradle\
-build/
 
-
-# IntelliJ IDEA / Eclipse
-.idea/
-*.iml
-
-# Java class files
-*.class
-
-# Binary or lock files
-*.lock
+# Binary and lock files
 *.bin
+*.lock
 *.jar
+*.class
 *.probe
-
-# VS Code (optional)
-.vscode/
 
 # OS / editor temp files
 .DS_Store
 Thumbs.db
 *.log
-*.lock
-/.gradle
