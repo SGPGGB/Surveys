@@ -5,6 +5,7 @@
 .settings/
 target/
 .gradle/
+.gradle\
 build/
 
 

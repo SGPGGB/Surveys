@@ -35,7 +35,7 @@ public class NextCommand extends CustomCommand {
 
     @Override
     public List<String> getCommandNames() {
-        return List.of("next", "go");
+        return List.of("next");
     }
 
     @Override

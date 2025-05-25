@@ -190,15 +190,12 @@ public class Manager {
             }
             case SINGLE_CHOICE, NUMERICAL, MULTIPLE_CHOICE -> {
                 List<String> choices = current.getChoicesList();
-                boolean b = false;
                 for (String s : choices) {
-                    if (answers.contains(s))
-                        b = true;
-                    text.append(getRandomColor())
-                        .append(b ? "<b>" : "")
+                    boolean b = answers.contains(Utils.plain(s));
+                    text.append(b ? "<b>" : "")
                         .append("[<click:run_command:/surveys answer " + s + ">")
                         .append(s)
-                        .append("] ")
+                        .append("]</click> ")
                         .append(b ? "</b>" : "");
                 }
             }
@@ -231,22 +228,18 @@ public class Manager {
         if (current == null)
             return;
 
-        switch (current.getAnswerType()) {
-            case NUMERICAL, FREE_TEXT, SINGLE_CHOICE -> {
-                answersCache.put(user.getUuid(), answer);
-            }
-            case MULTIPLE_CHOICE -> {
-                String s = answersCache.getOrDefault(user.getUuid(), "");
-                s = s + answer + ";";
-                answersCache.put(user.getUuid(), s);
-            }
-        }
+        answersCache.put(user.getUuid(), answer);
     }
 
     public String getAnswerCache(UUID uuid) {
         return answersCache.getOrDefault(uuid, "");
     }
 
+    /**
+     * returns answer list, plain format
+     * @param uuid the usser
+     * @return list with answers
+     */
     public List<String> getAnswerList(UUID uuid) {
         return Utils.stringToStringList(getAnswerCache(uuid));
     }
@@ -315,11 +308,12 @@ public class Manager {
 
 
     public void onLogout(ProxiedPlayer player) {
+        usersMap.remove(player.getUniqueId());
+        answersCache.remove(player.getUniqueId());
         User user = getUser(player.getUniqueId());
         if (user == null)
             return;
         db.saveUser(user);
-        usersMap.remove(player.getUniqueId());
     }
 
     public Map<UUID, String> getAnswersCache() {

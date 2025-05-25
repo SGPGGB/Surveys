@@ -6,6 +6,7 @@ import de.sgpggb.pluginutilitieslibbungee.utils.Util;
 import de.sgpggb.surveys.Manager;
 import de.sgpggb.surveys.SurveysPlugin;
 import de.sgpggb.surveys.misc.Permissions;
+import de.sgpggb.surveys.misc.Utils;
 import de.sgpggb.surveys.model.AnswerType;
 import de.sgpggb.surveys.model.Group;
 import de.sgpggb.surveys.model.Question;
@@ -151,7 +152,7 @@ public class EditCommand extends CustomCommand {
                     ChatUtils.send(player, prefix + "<green>Choices angepasst!");
                 }
                 case "removechoice" -> {
-                    List<String> choices = new ArrayList<>(question.getChoicesList());
+                    List<String> choices = new ArrayList<>(question.getChoicesList().stream().map(Utils::plain).toList());
                     if (!choices.contains(value)) {
                         ChatUtils.send(player, prefix + "<red>Wert " + value + " ist keine Option");
                         return;
@@ -159,6 +160,17 @@ public class EditCommand extends CustomCommand {
                     choices.remove(value);
                     question.setChoicesList(choices);
                     ChatUtils.send(player, prefix + "<green>Choices angepasst!");
+                }
+                case "choicesamount" -> {
+                    int choicesAmount;
+                    try {
+                        choicesAmount = Integer.parseInt(value);
+                    } catch (NumberFormatException e) {
+                        ChatUtils.send(player, prefix + "<red>Keine Nummer: " + value);
+                        return;
+                    }
+                    question.setChoicesAmount(choicesAmount);
+                    ChatUtils.send(player, prefix + "<green>ChoicesAmount angepasst");
                 }
                 case "answertype" -> {
                     AnswerType answerType = AnswerType.fromString(value);
@@ -255,7 +267,7 @@ public class EditCommand extends CustomCommand {
                     case "reward" -> Util.list("infotext", "claimtext", "rewardtype", "reward").stream()
                         .filter(e -> e.startsWith(args[2].toLowerCase()))
                         .collect(Collectors.toList());
-                    case "question" -> Util.list("text", "nextid", "groupid", "addchoice", "removechoice", "answertype")
+                    case "question" -> Util.list("text", "nextid", "groupid", "addchoice", "removechoice", "answertype", "choicesamount")
                         .stream().filter(e -> e.startsWith(args[2].toLowerCase()))
                         .collect(Collectors.toList());
                     case "group" -> Util.list("name", "order", "rewardid", "permission", "firstquestionid")

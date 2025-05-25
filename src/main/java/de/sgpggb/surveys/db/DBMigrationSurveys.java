@@ -75,6 +75,7 @@ public class DBMigrationSurveys extends DBMigration {
                 .column(new SQLColumn("id", "INT", 11, false, "AUTO_INCREMENT"))
                 .column(new SQLColumn("text", "TEXT", 0, true, ""))
                 .column(new SQLColumn("choices", "TEXT", 0, true, ""))
+                .column(new SQLColumn("choicesAmount", "INT", 11, true, ""))
                 .column(new SQLColumn("groupID", "INT", 11, true, ""))
                 .column(new SQLColumn("nextID", "INT", 11, true, ""))
                 .column(new SQLColumn("answerType", "VARCHAR", 64, true, ""))

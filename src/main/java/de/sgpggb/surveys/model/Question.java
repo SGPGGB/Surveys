@@ -11,21 +11,24 @@ public class Question {
     String text;
     AnswerType answerType;
     String choices;
+    int choicesAmount;
     int groupID;
 
     public Question() {
         this.id = -1;
         this.text = "";
         this.choices = "";
+        this.choicesAmount = 5;
         this.nextID = -1;
         this.answerType = AnswerType.FREE_TEXT;
         this.groupID = -1;
     }
 
-    public Question(int id, String text, String choices, int nextID, AnswerType answerType, int groupID) {
+    public Question(int id, String text, String choices, int choicesAmount, int nextID, AnswerType answerType, int groupID) {
         this.id = id;
         this.text = text;
         this.choices = choices;
+        this.choicesAmount = choicesAmount;
         this.nextID = nextID;
         this.answerType = answerType;
         this.groupID = groupID;
@@ -79,6 +82,14 @@ public class Question {
 
     public void setChoices(String choices) {
         this.choices = choices;
+    }
+
+    public int getChoicesAmount() {
+        return choicesAmount;
+    }
+
+    public void setChoicesAmount(int choicesAmount) {
+        this.choicesAmount = choicesAmount;
     }
 
     public int getGroupID() {

@@ -1,5 +1,7 @@
 package de.sgpggb.surveys.misc;
 
+import de.sgpggb.pluginutilitieslibbungee.utils.ChatUtils;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -22,6 +24,14 @@ public class Utils {
 
     public static String intListToString(List<Integer> list) {
         return list.stream().map(String::valueOf).collect(Collectors.joining(";"));
+    }
+
+    public static String stringListToString(List<String> list) {
+        return String.join(";", list);
+    }
+
+    public static String plain(String s) {
+        return ChatUtils.plain(ChatUtils.mm(s));
     }
 
 }

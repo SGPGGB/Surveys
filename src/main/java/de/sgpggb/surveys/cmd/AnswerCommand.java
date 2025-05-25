@@ -6,6 +6,7 @@ import de.sgpggb.pluginutilitieslibbungee.utils.ChatUtils;
 import de.sgpggb.surveys.Manager;
 import de.sgpggb.surveys.SurveysPlugin;
 import de.sgpggb.surveys.misc.Permissions;
+import de.sgpggb.surveys.misc.Utils;
 import de.sgpggb.surveys.model.AnswerType;
 import de.sgpggb.surveys.model.Question;
 import de.sgpggb.surveys.model.User;
@@ -49,30 +50,43 @@ public class AnswerCommand extends CustomCommand {
 
         //answer the question
         if (args[0].equalsIgnoreCase("#confirm")) {
+            if (list.isEmpty()) {
+                ChatUtils.send(player, prefix + "<red>Du hast noch keine Antwort abgegeben.");
+                return;
+            }
+
             manager.answer(user, String.join(";", list));
             manager.removeAnswerCache(user.getUuid());
             return;
         }
 
-        String answer = String.join(" ", args);
+        //remove all color codes from answer
+        String answer = Utils.plain(String.join(" ", args));
         String additional = "";
+
         switch (question.getAnswerType()) {
-            case FREE_TEXT -> {
+            case FREE_TEXT, SINGLE_CHOICE, NUMERICAL -> {
                 manager.addAnswerToCache(user, answer);
             }
-            case SINGLE_CHOICE -> {
-                list.clear();
-                list.add(answer);
-                manager.addAnswerToCache(user, String.join(";", list));
-            }
             case MULTIPLE_CHOICE -> {
-                if (list.contains(answer))
+                if (list.contains(answer)) {
                     list.remove(answer);
-                else
+                } else {
+                    if (list.size() >= question.getChoicesAmount()) {
+                        ChatUtils.send(player, prefix + "<red>Du darfst maximal " + question.getChoicesAmount() + " Antworten auswählen!");
+                        return;
+                    }
                     list.add(answer);
-                manager.addAnswerToCache(user, String.join(";", list));
+                }
+                manager.addAnswerToCache(user, Utils.stringListToString(list));
             }
         }
+
+        manager.sendQuestion(user);
+
+        //stop if no answer is set
+        if (list.isEmpty())
+            return;
 
         ChatUtils.send(player, prefix + "Deine Antwort: ");
 

@@ -37,7 +37,7 @@ dependencies {
 }
 
 group = "de.sgpggb"
-version = "0.1"
+version = "0.2"
 var mcapi = "1.21"
 description = "Surveys"
 

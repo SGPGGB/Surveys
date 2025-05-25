@@ -91,6 +91,7 @@ public class DBAdapter {
                         res.getInt("id"),
                         res.getString("text"),
                         res.getString("choices"),
+                        res.getInt("choicesAmount"),
                         res.getInt("nextID"),
                         AnswerType.valueOf(res.getString("answerType")),
                     res.getInt("groupID")
@@ -402,4 +403,25 @@ public class DBAdapter {
             Util.close(stmt);
         }
     }
+
+    public void deleteUser(User user) {
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.getConnection().prepareStatement("DELETE FROM " + usersTable.getName() + " WHERE uuid = ?");
+            stmt.setString(1, user.getUuid().toString());
+            stmt.executeUpdate();
+
+            Util.close(stmt);
+
+            stmt = conn.getConnection().prepareStatement("DELETE FROM " + answersTable.getName() + " WHERE uuid = ?");
+            stmt.setString(1, user.getUuid().toString());
+
+            stmt.executeUpdate();
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        } finally {
+            Util.close(stmt);
+        }
+    }
+
 }

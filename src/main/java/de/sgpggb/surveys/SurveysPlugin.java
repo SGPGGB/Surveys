@@ -9,6 +9,7 @@ import de.sgpggb.surveys.cmd.EditCommand;
 import de.sgpggb.surveys.cmd.ListCommand;
 import de.sgpggb.surveys.cmd.NextCommand;
 import de.sgpggb.surveys.cmd.ReloadCommand;
+import de.sgpggb.surveys.cmd.TempCommand;
 import de.sgpggb.surveys.cmd.VersionCommand;
 import de.sgpggb.surveys.db.DBAdapter;
 import de.sgpggb.surveys.listener.PlayerListener;
@@ -52,6 +53,7 @@ public class SurveysPlugin extends CustomJavaPlugin {
         cmd.registerCmd(new NextCommand());
         cmd.registerCmd(new ReloadCommand());
         cmd.registerCmd(new VersionCommand());
+        cmd.registerCmd(new TempCommand());
         this.getProxy().getPluginManager().registerCommand(this, cmd);
 
         this.getProxy().getPluginManager().registerListener(this, new PlayerListener());
