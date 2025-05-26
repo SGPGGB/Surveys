@@ -1,5 +1,6 @@
 package de.sgpggb.surveys.model;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -10,21 +11,21 @@ public class Question {
     int nextID;
     String text;
     AnswerType answerType;
-    String choices;
+    List<Choice> choices;
     int choicesAmount;
     int groupID;
 
     public Question() {
         this.id = -1;
         this.text = "";
-        this.choices = "";
+        this.choices = new ArrayList<>();
         this.choicesAmount = 5;
         this.nextID = -1;
         this.answerType = AnswerType.FREE_TEXT;
         this.groupID = -1;
     }
 
-    public Question(int id, String text, String choices, int choicesAmount, int nextID, AnswerType answerType, int groupID) {
+    public Question(int id, String text, List<Choice> choices, int choicesAmount, int nextID, AnswerType answerType, int groupID) {
         this.id = id;
         this.text = text;
         this.choices = choices;
@@ -66,22 +67,16 @@ public class Question {
         this.text = text;
     }
 
-    public List<String> getChoicesList() {
-        return Arrays.asList(choices.split(";"));
+    public List<Choice> getChoicesList() {
+        return this.choices;
     }
 
-    public void setChoicesList(List<String> choices) {
-        this.choices = choices.stream()
-            .filter(s -> !s.isEmpty())
-            .collect(Collectors.joining(";"));
-    }
-
-    public String getChoices() {
-        return choices;
-    }
-
-    public void setChoices(String choices) {
+    public void setChoices(List<Choice> choices) {
         this.choices = choices;
+    }
+
+    public List<Choice> getChoices() {
+        return choices;
     }
 
     public int getChoicesAmount() {

@@ -9,6 +9,7 @@ import de.sgpggb.surveys.SurveysPlugin;
 import de.sgpggb.surveys.misc.Utils;
 import de.sgpggb.surveys.model.Answer;
 import de.sgpggb.surveys.model.AnswerType;
+import de.sgpggb.surveys.model.Choice;
 import de.sgpggb.surveys.model.Group;
 import de.sgpggb.surveys.model.Question;
 import de.sgpggb.surveys.model.Reward;
@@ -90,7 +91,7 @@ public class DBAdapter {
                 Question question = new Question(
                         res.getInt("id"),
                         res.getString("text"),
-                        res.getString("choices"),
+                    Choice.createList(res.getString("choices")),
                         res.getInt("choicesAmount"),
                         res.getInt("nextID"),
                         AnswerType.valueOf(res.getString("answerType")),
@@ -344,7 +345,7 @@ public class DBAdapter {
             }
 
             stmt.setString(1, question.getText());
-            stmt.setString(2, question.getChoices());
+            stmt.setString(2, Choice.createString(question.getChoicesList()));
             stmt.setInt(3, question.getGroupID());
             stmt.setInt(4, question.getNextID());
             stmt.setString(5, question.getAnswerType().name());

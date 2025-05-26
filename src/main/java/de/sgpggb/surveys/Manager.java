@@ -8,6 +8,7 @@ import de.sgpggb.surveys.events.SurveysQuestionAnsweredEvent;
 import de.sgpggb.surveys.events.SurveysSurveyCompletedEvent;
 import de.sgpggb.surveys.misc.Utils;
 import de.sgpggb.surveys.model.Answer;
+import de.sgpggb.surveys.model.Choice;
 import de.sgpggb.surveys.model.Group;
 import de.sgpggb.surveys.model.Question;
 import de.sgpggb.surveys.model.Reward;
@@ -33,7 +34,7 @@ public class Manager {
 
     //          uuid  object
     private Map<UUID, User> usersMap = new HashMap<>();
-    private Map<UUID, String> answersCache = new HashMap<>();
+    private Map<UUID, List<Choice>> answersCache = new HashMap<>();
 
     Logging log = SurveysPlugin.getInstance().getLog();
     DBAdapter db = SurveysPlugin.getInstance().getDbAdapter();
@@ -156,15 +157,15 @@ public class Manager {
      * @param user the user
      * @param answer the answer
      */
-    public void answer(User user, String answer) {
+    public void answer(User user, List<Choice> answer) {
         Question current = user.getCurrentQuestion();
         if (current == null) {
             log.error("user " + user.getName() + " answered, but question is null!");
             return;
         }
-        log.debug("player " + user.getName() + " answered question " + current.getId() + " with " + answer);
+        log.debug("player " + user.getName() + " answered question " + current.getId() + " with " + answer.toString());
 
-        Answer ans = new Answer(-1, current.getId(), user.getUuid(), answer, null);
+        Answer ans = new Answer(-1, current.getId(), user.getUuid(), Choice.createString(answer), null);
         db.saveAnswer(ans);
         SurveysPlugin.getInstance().getProxy().getPluginManager().callEvent(new SurveysQuestionAnsweredEvent(current, ans));
         goNextQuestion(user);
@@ -183,19 +184,21 @@ public class Manager {
 
         ChatUtils.send(user.getUuid(), prefix + current.getText());
         StringBuilder text = new StringBuilder();
-        List<String> answers = getAnswerList(user.getUuid());
+        List<Choice> answers = getAnswerCache(user.getUuid());
         switch (current.getAnswerType()) {
             case FREE_TEXT -> {
                 text = new StringBuilder("<green><click:suggest_command:/surveys answer >[Klicken zum Antworten]");
             }
             case SINGLE_CHOICE, NUMERICAL, MULTIPLE_CHOICE -> {
-                List<String> choices = current.getChoicesList();
-                for (String s : choices) {
-                    boolean b = answers.contains(Utils.plain(s));
+                List<Choice> choices = current.getChoices();
+                for (Choice c : choices) {
+                    boolean b = answers.contains(c);
                     text.append(b ? "<b>" : "")
-                        .append("[<click:run_command:/surveys answer " + s + ">")
-                        .append(s)
+                        .append("<" + c.getColor()  + ">")
+                        .append("[<click:run_command:/surveys answer " + c.getText() + ">")
+                        .append(c.getText())
                         .append("]</click> ")
+                        .append("</" + c.getColor() + ">")
                         .append(b ? "</b>" : "");
                 }
             }
@@ -221,27 +224,18 @@ public class Manager {
     /**
      * saves current answer to the cache
      * @param user the user
-     * @param answer the answer
+     * @param choice the answer
      */
-    public void addAnswerToCache(User user, String answer) {
+    public void addAnswerToCache(User user, List<Choice> choice) {
         Question current = user.getCurrentQuestion();
         if (current == null)
             return;
 
-        answersCache.put(user.getUuid(), answer);
+        answersCache.put(user.getUuid(), choice);
     }
 
-    public String getAnswerCache(UUID uuid) {
-        return answersCache.getOrDefault(uuid, "");
-    }
-
-    /**
-     * returns answer list, plain format
-     * @param uuid the usser
-     * @return list with answers
-     */
-    public List<String> getAnswerList(UUID uuid) {
-        return Utils.stringToStringList(getAnswerCache(uuid));
+    public List<Choice> getAnswerCache(UUID uuid) {
+        return answersCache.getOrDefault(uuid, new ArrayList<>());
     }
 
     public Question getQuestion(int id) {
@@ -314,14 +308,6 @@ public class Manager {
         if (user == null)
             return;
         db.saveUser(user);
-    }
-
-    public Map<UUID, String> getAnswersCache() {
-        return answersCache;
-    }
-
-    public void setAnswersCache(Map<UUID, String> answersCache) {
-        this.answersCache = answersCache;
     }
 
     public Map<Integer, Group> getGroupsMap() {

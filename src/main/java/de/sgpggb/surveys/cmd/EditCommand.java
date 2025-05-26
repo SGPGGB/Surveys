@@ -8,6 +8,7 @@ import de.sgpggb.surveys.SurveysPlugin;
 import de.sgpggb.surveys.misc.Permissions;
 import de.sgpggb.surveys.misc.Utils;
 import de.sgpggb.surveys.model.AnswerType;
+import de.sgpggb.surveys.model.Choice;
 import de.sgpggb.surveys.model.Group;
 import de.sgpggb.surveys.model.Question;
 import de.sgpggb.surveys.model.Reward;
@@ -142,23 +143,31 @@ public class EditCommand extends CustomCommand {
                     ChatUtils.send(player, prefix + "<green>Group angepasst");
                 }
                 case "addchoice" -> {
-                    List<String> choices = new ArrayList<>(question.getChoicesList());
-                    if (choices.contains(value)) {
+                    List<Choice> choices = new ArrayList<>(question.getChoicesList());
+                    Choice choice = new Choice(value);
+                    if (choice.getText().isEmpty() || choices.stream().map(Choice::getText).toList().contains(choice.getText())) {
                         ChatUtils.send(player, prefix + "<red>Wert " + value + " ist bereits eine Option");
                         return;
                     }
-                    choices.add(value);
-                    question.setChoicesList(choices);
+                    choices.add(choice);
+                    question.setChoices(choices);
                     ChatUtils.send(player, prefix + "<green>Choices angepasst!");
                 }
                 case "removechoice" -> {
-                    List<String> choices = new ArrayList<>(question.getChoicesList().stream().map(Utils::plain).toList());
-                    if (!choices.contains(value)) {
+                    List<Choice> choices = new ArrayList<>(question.getChoicesList());
+                    Choice choice = null;
+                    for (Choice c : choices) {
+                        if (c.getText().equalsIgnoreCase(value))
+                            choice = c;
+                    }
+
+                    if (choice == null) {
                         ChatUtils.send(player, prefix + "<red>Wert " + value + " ist keine Option");
                         return;
                     }
-                    choices.remove(value);
-                    question.setChoicesList(choices);
+
+                    choices.remove(choice);
+                    question.setChoices(choices);
                     ChatUtils.send(player, prefix + "<green>Choices angepasst!");
                 }
                 case "choicesamount" -> {
