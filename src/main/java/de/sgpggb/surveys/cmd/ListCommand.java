@@ -6,6 +6,7 @@ import de.sgpggb.pluginutilitieslibbungee.utils.Util;
 import de.sgpggb.surveys.Manager;
 import de.sgpggb.surveys.SurveysPlugin;
 import de.sgpggb.surveys.misc.Permissions;
+import de.sgpggb.surveys.model.Choice;
 import de.sgpggb.surveys.model.Group;
 import de.sgpggb.surveys.model.Question;
 import de.sgpggb.surveys.model.Reward;
@@ -79,7 +80,7 @@ public class ListCommand extends CustomCommand {
                     ChatUtils.send(sender, s + "NextID: " + question.getNextID());
                     ChatUtils.send(sender, s + "Group: " + question.getGroupID());
                     ChatUtils.send(sender, s + "AnswerType: " + question.getAnswerType().name());
-                    ChatUtils.send(sender, s + "Choices: " + question.getChoices());
+                    ChatUtils.send(sender, s + "Choices: " + question.getChoices().stream().map(Choice::getText).toList());
                     return;
                 }
 
@@ -138,6 +139,6 @@ public class ListCommand extends CustomCommand {
 
     @Override
     public void printHelp(CommandSender sender) {
-        ChatUtils.send(sender, SurveysPlugin.CHATPREFIX + "/surveys list <group/question/reward> [id] - Listet Sachen auf");
+        ChatUtils.send(sender, SurveysPlugin.CHATPREFIX + "/surveys list <question/reward/group> [id] - Listet Question/Reward/Group auf");
     }
 }

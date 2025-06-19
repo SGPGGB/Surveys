@@ -78,6 +78,6 @@ public class AddCommand extends CustomCommand {
 
     @Override
     public void printHelp(CommandSender sender) {
-        ChatUtils.send(sender, SurveysPlugin.CHATPREFIX + "/surveys add <options> - Sachen hinzufügen");
+        ChatUtils.send(sender, SurveysPlugin.CHATPREFIX + "/surveys add <options> - Question/Reward/Group hinzufügen");
     }
 }

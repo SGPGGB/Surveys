@@ -296,6 +296,6 @@ public class EditCommand extends CustomCommand {
 
     @Override
     public void printHelp(CommandSender sender) {
-        ChatUtils.send(sender, SurveysPlugin.CHATPREFIX + "/surveys edit - Sachen editieren");
+        ChatUtils.send(sender, SurveysPlugin.CHATPREFIX + "/surveys edit - Question/Reward/Group editieren");
     }
 }

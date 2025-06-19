@@ -135,6 +135,6 @@ public class AnswerCommand extends CustomCommand {
 
     @Override
     public void printHelp(CommandSender sender) {
-        ChatUtils.send(sender, SurveysPlugin.CHATPREFIX + "/surveys answer - Antworten");
+        ChatUtils.send(sender, SurveysPlugin.CHATPREFIX + "/surveys answer - Antwort geben");
     }
 }
